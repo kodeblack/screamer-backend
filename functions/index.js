@@ -3,34 +3,35 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
+const express = require('express');
+const app = express();
 
-exports.getScreams = functions.https.onRequest((req, res) => {
-    admin.firestore().collection('screams').get()
+app.get('/screams', (req, res) => {
+    admin.firestore()
+    .collection('screams')
+    .orderBy('created_at', 'desc')
+    .get()
     .then(data => {
         let screams = [];
         data.forEach(doc => {
-            screams.push(doc.data());
+            screams.push({
+                screamId: doc.id,
+                body: doc.data().body,
+                userHandle: doc.data().userHandle,
+                created_at: doc.data().created_at
+            });
         });
         return res.json(screams);
     })
     .catch(err => console.error(err));
 });
 
-exports.createScream = functions.https.onRequest((req, res) => {
-    if(req.method !== 'POST')
-    {
-        return res.status(400).json({
-            error: 'Method not allowed'
-        });
-    }
+app.post('/scream', (req, res) => {
     
    const newScream = {
        body: req.body.body,
        userHandle: req.body.userHandle,
-       created_at: admin.firestore.Timestamp.fromDate(new Date())
+       created_at: new Date().toISOString()
    };
 
    admin.firestore()
@@ -48,3 +49,7 @@ exports.createScream = functions.https.onRequest((req, res) => {
         console.log(err);
     })
 });
+
+//https://baseurl/api/?
+
+exports.api = functions.region('europe-west1').https.onRequest(app);
