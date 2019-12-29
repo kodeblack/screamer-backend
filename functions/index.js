@@ -1,14 +1,27 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const app = require('express')();
+const firebase = require('firebase');
 
 admin.initializeApp();
 
-const express = require('express');
-const app = express();
+const firebaseConfig = {
+    apiKey: "AIzaSyA8SQbYDwRU0_DUkwpReNnTRLfZNOcAfgc",
+    authDomain: "socialape-e26f7.firebaseapp.com",
+    databaseURL: "https://socialape-e26f7.firebaseio.com",
+    projectId: "socialape-e26f7",
+    storageBucket: "socialape-e26f7.appspot.com",
+    messagingSenderId: "924127041829",
+    appId: "1:924127041829:web:5d11b85a51623cfdf7a2cc",
+    measurementId: "G-T9K8HKS921"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = admin.firestore();
 
 app.get('/screams', (req, res) => {
-    admin.firestore()
-    .collection('screams')
+    db.collection('screams')
     .orderBy('created_at', 'desc')
     .get()
     .then(data => {
@@ -34,8 +47,7 @@ app.post('/scream', (req, res) => {
        created_at: new Date().toISOString()
    };
 
-   admin.firestore()
-    .collection('screams')
+   db.collection('screams')
     .add(newScream) 
     .then(doc => {
         res.json({
@@ -47,6 +59,58 @@ app.post('/scream', (req, res) => {
             error: 'Something went wrong'
         });
         console.log(err);
+    })
+});
+
+//signup
+app.post('/signup', (req, res) => {
+    
+    const newUser = {
+        email: req.body.email,
+        password: req.body.password,
+        confirmPassword: req.body.confirmPassword,
+        handle: req.body.handle
+    };
+
+    //Validate user
+    let token, userId;
+    db.doc(`/users/${newUser.handle}`).get()
+    .then(doc => {
+        if(doc.exists){
+            return res.status(400).json({ handle: 'This handle is already taken'});
+        }else{
+            return firebase
+            .auth()
+            .createUserWithEmailAndPassword(newUser.email, newUser.password);
+        }
+    })
+    .then(data => {
+        userId = data.user.uid;
+        return data.user.getIdToken();
+    })
+    .then(idToken => {
+         token = idToken;
+         const userCredentials = {
+            handle: newUser.handle,
+            email: newUser.email,
+            created_at: new Date().toISOString(),
+            userId
+         };
+         return db.doc(`/users/${newUser.handle}`).set(userCredentials);
+    })
+    .then(() => {
+        return res.status(201).json({ token });
+    })
+    .catch(err => {
+        console.error(err);
+        if(err.code === "auth/email-already-in-use"){
+            return res.status(400).json({
+                email: "E-mail is already in use"
+            })
+        }
+        else{
+            return res.status(500).json({ error: err.code });
+        }
     })
 });
 
