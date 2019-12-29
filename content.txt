@@ -33,3 +33,5 @@
 ⌨️ (10:54:30) Notifications
 ⌨️ (11:31:59) Loading Skeletons
 ⌨️ (11:59:28) Deployment to Firebase
+
+E-mail regEx link https://pastebin.com/f33g85pd
