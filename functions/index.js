@@ -17,8 +17,43 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = admin.firestore();
+
+const firebase_auth = (req, res, next) => {
+    let idToken;
+    if(req.headers.authorization && req.headers.authorization.startsWith('Bearer ')){
+        idToken = req.headers.authorization.split('Bearer ')[1];
+    }else{
+        console.error('No token found');
+        return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    admin.auth().verifyIdToken(idToken)
+    .then(decodedToken => {
+        req.user = decodedToken;
+        console.log(decodedToken);
+        return db.collection('users')
+        .where('userId', 
+        '==', req.user.uid)
+        .limit(1)
+        .get();
+    })
+    .then(tokenData => {
+        req.user.handle = tokenData.docs[0].data().handle;
+        return next();
+    })
+    .catch(err => {
+        console.error('Error while verifying token', err);
+        if(err.code === 'auth/argument-error')
+        {
+            return res.status(403).json({ error: 'Invalid Token' });
+        }else if(err.code == 'auth/id-token-expired'){
+            return res.status(403).json({ error: 'Expired Token' });
+        }
+        return res.status(403).json(err);
+    });
+
+}
 
 app.get('/screams', (req, res) => {
     db.collection('screams')
@@ -39,15 +74,19 @@ app.get('/screams', (req, res) => {
     .catch(err => console.error(err));
 });
 
-app.post('/scream', (req, res) => {
+app.post('/scream', firebase_auth, (req, res) => {
     
-   const newScream = {
-       body: req.body.body,
-       userHandle: req.body.userHandle,
-       created_at: new Date().toISOString()
-   };
+    if(req.body.body.trim() === ''){
+        return res.status(400).json({ body: 'Body must not be empty' });
+    }
 
-   db.collection('screams')
+    const newScream = {
+       body: req.body.body,
+       userHandle: req.user.handle,
+       created_at: new Date().toISOString()
+    };
+
+    db.collection('screams')
     .add(newScream) 
     .then(doc => {
         res.json({
