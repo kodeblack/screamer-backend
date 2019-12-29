@@ -114,6 +114,9 @@ app.post('/signup', (req, res) => {
     })
 });
 
-//https://baseurl/api/?
+/**
+ * Load the url with a /api
+ * https://baseurl/api/?
+ */
 
 exports.api = functions.region('europe-west1').https.onRequest(app);
