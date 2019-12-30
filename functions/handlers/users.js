@@ -103,6 +103,12 @@ exports.uploadeProfileImage = (req, res) => {
     let image_to_be_uploaded = {};
     bus_boy.on('file', (fieldname, file, filename, encoding, mimetype) => {
 
+        if(mimetype !== 'image/jpeg' && mimetype !== 'image/png'){
+            return res.status(400).json({
+                error: 'File must be an image.'
+            });
+        }
+
         const image_extension = filename.split('.')[filename.split('.').length - 1];
         image_file_name = `${Math.round(Math.random() * 1000000000000).toString()}.${image_extension}`;
         const file_path = path.join(os.tmpdir(), image_file_name);
