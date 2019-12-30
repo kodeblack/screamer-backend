@@ -13,6 +13,7 @@ const {
 const {
   signup,
   login,
+  uploadeProfileImage
 } = require('./handlers/users');
 
 // Scream routes
@@ -22,5 +23,6 @@ app.post('/scream', firebase_auth, createScream);
 // users routes
 app.post('/signup', signup);
 app.post('/login', login);
+app.post('/user/image', firebase_auth, uploadeProfileImage);
 
 exports.api = functions.region('europe-west1').https.onRequest(app);
