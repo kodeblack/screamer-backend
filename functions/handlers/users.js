@@ -1,7 +1,7 @@
 const { db, admin } = require('../utility/admin')
 const firebase = require('firebase')
 const fireabse_config = require('../utility/fireabse_config')
-const { validateSignupData, validateLoginData } = require('../utility/validators')
+const { validateSignupData, validateLoginData, reduceUserDetails } = require('../utility/validators')
 
 firebase.initializeApp(fireabse_config);
 
@@ -138,4 +138,38 @@ exports.uploadeProfileImage = (req, res) => {
         })
     });
     bus_boy.end(req.rawBody);
+}
+
+exports.addUserDetails = (req, res) => {
+    let userDetails = reduceUserDetails(req.body);
+    dob.doc(`/users/${req.user.handle}`).update(userDetails)
+    .then(() => {
+        return res.json({ message: 'Details added successfully' });
+    })
+    .catch(err => {
+        console.error(err);
+        res.status(500).json({ error: err.code });
+    })
+};
+
+exports.getAUthenticatedUser = (req, res) => {
+    let userData = {};
+    db.doc(`/users/${req.user.handle}`).get()
+    .then(doc => {
+        if(doc.exists){
+            userData.credentials = doc.data();
+            return db.collection('likes').where('userHandle', '==', req.user.handle).get();
+        }
+    })
+    .then(data => {
+        userData.likes = [];
+        data.forEach(doc => {
+            userData.likes.push(doc.data());
+        })
+        return res.json(userData);
+    })
+    .catch(err => {
+        console.error(err);
+        return res.status(500).json({ error: err.code });
+    })
 }
