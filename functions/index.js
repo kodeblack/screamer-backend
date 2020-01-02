@@ -8,7 +8,8 @@ const firebase_auth = require('./utility/firebase_auth');
 const {
   getScreams,
   createScream,
-  getScream
+  getScream,
+  commentOnScream
 } = require('./handlers/screams');
 
 const {
@@ -23,7 +24,7 @@ const {
 app.get('/screams', getScreams);
 app.post('/scream', firebase_auth, createScream);
 app.get('/scream/:screamId', getScream);
-
+app.post('/scream/:screamId/comment', firebase_auth, commentOnScream)
 
 // users routes
 app.post('/signup', signup);

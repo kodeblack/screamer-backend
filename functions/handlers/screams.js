@@ -71,3 +71,30 @@ exports.getScream = (req, res) => {
         res.status(500).json({ error: err.code });
     })
 }
+
+exports.commentOnScream = (req, res) => {
+    if(req.body.body.trim() === '') return res.status(400).json({ error: 'Must not be empty' });
+    const comment = {
+        body: req.body.body,
+        created_at: new Date().toISOString(),
+        screamId: req.params.screamId,
+        userHandle: req.user.handle,
+        userImage: req.user.image_url
+    };
+    db.doc(`/screams/${req.params.screamId}`).get()
+    .then(doc => {
+        if(!doc.exists){
+            return res.status(404).json({ error: 'Scream not found' });
+        }
+        return db.collection('comments').add(comment)
+    })
+    .then(() => {
+        res.json(comment);
+    })
+    .catch(err => {
+        console.error(err);
+        res.status(500).json({
+            error: 'Something went wrong'
+        });
+    })
+}
