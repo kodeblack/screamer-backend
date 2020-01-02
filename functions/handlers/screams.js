@@ -28,15 +28,18 @@ exports.createScream = (req, res) => {
     const newScream = {
        body: req.body.body,
        userHandle: req.user.handle,
-       created_at: new Date().toISOString()
+       userImage: req.user.image_url,
+       created_at: new Date().toISOString(),
+       like_count: 0,
+       comment_count: 0
     };
 
     db.collection('screams')
     .add(newScream) 
     .then(doc => {
-        res.json({
-            message: `document ${doc.id} created successfully`
-        });
+        const resScream = newScream;
+        resScream.screamId = doc.id;
+        res.json(resScream);
     })
     .catch(err => {
         res.status(500).json({
@@ -97,4 +100,12 @@ exports.commentOnScream = (req, res) => {
             error: 'Something went wrong'
         });
     })
+}
+
+exports.likeScream = (req,res) => {
+    
+}
+
+exports.unlikeScream = (req,res) => {
+
 }
