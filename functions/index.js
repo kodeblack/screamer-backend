@@ -21,7 +21,9 @@ const {
   login,
   uploadeProfileImage,
   addUserDetails,
-  getAUthenticatedUser
+  getAUthenticatedUser,
+  getUserDetails,
+  markNotificationsRead
 } = require('./handlers/users');
 
 // Scream routes
@@ -31,13 +33,16 @@ app.get('/scream/:screamId', getScream);
 app.post('/scream/:screamId/comment', firebase_auth, commentOnScream);
 app.get('/scream/:screamId/like', firebase_auth, likeScream);
 app.get('/scream/:screamId/unlike', firebase_auth, unlikeScream);
-app.delete('/scream/:screamId', firebase_auth, deleteScream)
+app.delete('/scream/:screamId', firebase_auth, deleteScream);
+
 // users routes
 app.post('/signup', signup);
 app.post('/login', login);
 app.post('/user/image', firebase_auth, uploadeProfileImage);
 app.post('/user', firebase_auth, addUserDetails);
 app.get('/user', firebase_auth, getAUthenticatedUser);
+app.get('/user/:handle', getUserDetails);
+app.post('/notifications', firebase_auth, markNotificationsRead);
 
 exports.api = functions.region('europe-west1').https.onRequest(app);
 
