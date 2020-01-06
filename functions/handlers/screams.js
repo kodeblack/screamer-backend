@@ -11,7 +11,10 @@ exports.getScreams = (req, res) => {
                 screamId: doc.id,
                 body: doc.data().body,
                 userHandle: doc.data().userHandle,
-                created_at: doc.data().created_at
+                created_at: doc.data().created_at,
+                comment_count: doc.data().comment_count,
+                like_count: doc.data().like_count,
+                userImage: doc.data().image_url
             });
         });
         return res.json(screams);
@@ -77,7 +80,7 @@ exports.getScream = (req, res) => {
 }
 
 exports.commentOnScream = (req, res) => {
-    if(req.body.body.trim() === '') return res.status(400).json({ error: 'Must not be empty' });
+    if(req.body.body.trim() === '') return res.status(400).json({ comment: 'Must not be empty' });
     const comment = {
         body: req.body.body,
         created_at: new Date().toISOString(),
@@ -90,7 +93,7 @@ exports.commentOnScream = (req, res) => {
         if(!doc.exists){
             return res.status(404).json({ error: 'Scream not found' });
         }
-        return doc.ref.update({ comment_count: doc.data().comment_ccount+1 })
+        return doc.ref.update({ comment_count: doc.data().comment_count+1 })
     })
     .then(() => {
         return db.collection('comments').add(comment);
